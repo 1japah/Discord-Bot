@@ -1,0 +1,227 @@
+#bot7
+
+#Imports
+
+from sys import path_importer_cache
+from discord import colour
+from discord.ext import commands   
+import discord
+import os
+import requests
+import json
+import time
+import random
+import io
+import aiohttp
+import string 
+
+
+#functions e listas
+
+def get_piada():
+     link = 'https://official-joke-api.appspot.com/random_joke'
+     response = requests.get(link)
+     dados = json.loads(response.text)
+     setup = dados.get('setup')
+     punch_line = dados.get('punchline')
+     dicio = {'first': setup , 'second': punch_line}
+     return dicio
+
+gojo_flowers = ["flores", "flowers","flor", "lindo", "bonito", "paisagem"]
+gojo_kire = ["Que lindo!", "Pretty!", "綺麗"]
+gojo_violin = ['hot', 'gostoso', 'estilo', 'style', 'gojo', 'Gojo', 'Gojou', 'gojou', 'gato', 'Gato', 'Gatao','Gatão', 'gatão','gatao', 'xavecado', 'megumi-chan','Megumi-chan']
+gojo_teach = ['Eu não te ensinei isso', 'Você não lembra os meus comandos?', 'Acho que você se confundiu']
+
+def get_anime_quote():
+     link = 'https://animechan.vercel.app/api/random'
+     response = requests.get(link)
+     data = json.loads(response.text)
+     anime = data.get('anime')
+     character = data.get('character')
+     quote = data.get('quote')
+
+     return('"'+ quote + '" -' + character + ', ' + anime)
+          
+def get_letra():
+     alfabeto = string.ascii_uppercase
+     alfabeto = list(alfabeto)
+     return random.choice(alfabeto)
+
+#Codigo do bot em si
+
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix = '>' , help_command=None, intents = intents)
+
+#Status do bot
+
+@bot.event
+async def on_ready():
+     print(f'{bot.user.name} has connected to Discord!')
+     joguinho = discord.Game('Jujutsu Kaisen')
+     await bot.change_presence(status = discord.Status.idle, activity = joguinho)
+
+#Entrando e saindo de servidores
+
+anexo1 = discord.Embed(title = '😎 Gojaum acabou de entrar no server 😎', description = ''' Obrigado por me adicionar ao seu servidor!!
+Para ver meus comandos digite ">help" em qualquer chat''', colour = discord.Colour.blurple())
+
+anexo1.set_image(url = 'https://media2.giphy.com/media/Al9XitEIwGgLU9yMfS/giphy.gif?cid=790b7611c51b30ec89da458412d89a8e2d17d81bdad6e4a0&rid=giphy.gif&ct=s')
+anexo1.set_thumbnail(url = 'https://i.pinimg.com/564x/32/bd/ab/32bdabafa2a05ee9b6a92d3864a88410.jpg')
+
+anexo1.add_field(name = 'Features', value = '''➜ O bot pode reagir ao que você escreve
+➜ O bot possui diversos comandos uteis e divertidos
+➜ Ele também toca 🎶 música 🎶''')
+
+anexo2 = discord.Embed(title = '😉 Obrigado por adicionar meu bot!! 😉', description = '''Qualquer dúvida digite o comando ">help" ou visite o site do bot
+''', colour = discord.Colour.from_rgb(0,255,0))
+
+anexo2.set_image(url = 'https://media.tenor.com/images/96181fa5fd057786db930d4224a6b694/tenor.gif')
+anexo2.set_thumbnail(url = 'https://64.media.tumblr.com/89b41fc0bac4f9310deb35db05062eb1/1be7164f7455a919-f4/s1280x1920/31d0b19baab52aa48b0e3fe3a38102f086b4170c.jpg')
+
+@bot.event
+async def on_guild_join(guilda):
+     print(f'{bot.user.name} has joined {guilda}')
+     #How do I sent a DM?
+     #Get the User or Member object and call abc.Messageable.send(). For example:
+     #user = client.get_user(381870129706958858)
+     #await user.send('👀')
+     
+     await guilda.text_channels[0].send(embed = anexo1)
+     
+     dono1 = guilda.owner
+     await dono1.send(embed = anexo2)
+
+     random1 = random.randrange(1,7)
+     random2 = random.randrange(1,7)
+
+     while random1 == random2:
+          if random1 == random2:
+               random2 = random.randrange(1,5)
+          else:
+               pass    
+     await guilda.text_channels[random1].send(embed = anexo1)
+     await guilda.text_channels[random2].send(embed = anexo1)
+
+despedida = discord.Embed(title = ' 😧 O que?! 😧 Então você não gosta mais de mim... 😢', description = '''Não sei o que te fez me expulsar, mas você pode relatar qualquer coisa nesse email:''', colour = discord.Colour.darker_grey())
+
+despedida.set_image(url = 'https://i.pinimg.com/originals/8a/08/f7/8a08f77ac3ad1e6282a741349625b1de.gif')
+despedida.set_thumbnail(url = 'https://i.pinimg.com/originals/a5/0a/88/a50a88e636b2e56c148c156c9317c42e.jpg')
+despedida.add_field(name = 'japapaitonist@gmail.com', value = 'Por favor, não spamem email :)')
+
+@bot.event
+async def on_guild_remove(guilda):
+     print(f'{bot.user.name} has left {guilda}')
+     dono = guilda.owner
+     print(dono)
+     await dono.send(embed = despedida)
+     
+#Resposta a erros
+
+@bot.event
+async def on_command_error(ctx, error):
+     if isinstance(error, commands.CommandNotFound):
+          await ctx.send(random.choice(gojo_teach))
+          await ctx.send('Digite ">help" para ver meus comandos')
+
+#reactions do bot
+
+@bot.event
+async def on_message(message):
+     if message.author == bot.user:
+          return
+     msg = message.content
+     if any(word in msg for word in gojo_flowers):
+          await message.channel.send(random.choice(gojo_kire))
+     if any(word in msg for word in gojo_violin):
+          imagem = discord.Embed(title = 'Alguém me chamou?')
+          imagem.set_image(url="https://i.pinimg.com/originals/e9/8a/44/e98a44d67857694e306b683a35fd02bf.png")
+          await message.channel.send(embed = imagem)
+     #Because you have an on_message event. When you have on_message event in your bot, you need to add await bot.process_commands(message) at the last line of your on_message event code. Otherwise it will block commands from working.#
+     await bot.process_commands(message)
+
+#comandos do bot
+
+@bot.command(name= 'joke')
+async def piada_(ctx):
+     piada = get_piada()
+     primeiro = piada.get('first')
+     segundo = piada.get('second')
+     await ctx.send(primeiro)
+     time.sleep(2.5)
+     await ctx.send(segundo)
+
+@bot.command(name= 'wisdom')
+async def saber_(ctx):
+     quote = get_anime_quote()
+     await ctx.send(quote)
+
+@bot.command(name= 'dados')
+async def dice_(ctx):
+     numero_sorte = random.randrange(1,6)
+     await ctx.send('Caiu o número ' + str(numero_sorte))
+
+@bot.command(name= 'adedonha')
+async def alfa(ctx):
+     letter = get_letra()
+     await ctx.send('Saiu a letra ' + "'"+ letter + "'")
+
+@bot.command(name = 'botnet')
+async def _wifi(ctx):
+     await ctx.send(f'A net do bot está com {round(bot.latency * 1000)}ms')
+
+@bot.command(name = 'clear')
+async def _limpo(ctx, amount = 8):
+     await ctx.channel.purge(limit = amount)
+
+#Comando help
+
+@bot.group(invoke_without_command= True)
+async def help(ctx):
+     vermelho = (255,0,0)
+
+     titulo1 = discord.Embed(title = '✨ Funycom bot ✨', description = '''Comandos do melhor bot do Gojo
+     *Não se esqueça do prefixo ´>´''', colour = discord.Colour.red())
+     titulo1.add_field(name = '''❓ Ajuda ❓
+     ''', value = '''➜ help ou help [comando]
+     ''') #Subtitulo 1
+     titulo1.add_field(name = '''🍣 Aleatório 🍜
+     ''', value = '''➜ joke, wisdom
+     ''') #Subtitulo 2
+     titulo1.add_field(name = '''🎯 Jogos 🪀
+     ''', value = '''➜ dados, adedonha
+     ''')
+     titulo1.add_field(name = '''⚙️ Funções ⚙️''', value = '''➜ botnet, clear
+     ''')
+
+     titulo1.set_thumbnail(url = 'https://i.pinimg.com/originals/4d/5e/87/4d5e87917b50dfa996e27a378caf3bae.jpg')
+
+     await ctx.send(embed = titulo1)
+
+@help.command()
+async def wisdom(ctx):
+     titulo2 = discord.Embed(title = '🎎 Comando ´>wisdom´ 🎎', description = 'Entrega um saber de um personagem de anime')
+     await ctx.send(embed = titulo2)
+
+@help.command()
+async def dados(ctx):
+     titulo2 = discord.Embed(title = '🎲 Comando ´>dados´ 🎲', description = 'Joga um dado de 6 lados')
+     await ctx.send(embed = titulo2)
+
+@help.command()
+async def adedonha(ctx):
+     titulo2 = discord.Embed(title = '📖 Comando ´>adedonha´ 📖', description = 'Sorteia uma letra do alfabeto')
+     await ctx.send(embed = titulo2)
+
+@help.command()
+async def botnet(ctx):
+     titulo2 = discord.Embed(title = '📡 Comando ´>botnet´ 📡', description = 'Envia o ping do bot')
+     await ctx.send(embed = titulo2)
+
+@help.command()
+async def clear(ctx):
+     titulo2 = discord.Embed(title = '🧹 Comando ´>clear´ 🧹', description = 'Exclui as ultimas 7 mensagens do chat')
+     await ctx.send(embed = titulo2)
+
+
+bot.run('TOKEN')

@@ -1,11 +1,11 @@
-```
-#bot7
+#bot9
 
 #Imports
 
 from sys import path_importer_cache
 from discord import colour
-from discord.ext import commands   
+from discord.ext import commands, tasks   
+from keep_server import keep_alive
 import discord
 import os
 import requests
@@ -13,20 +13,24 @@ import json
 import time
 import random
 import io
-import aiohttp
 import string 
 
+my_secret = os.environ['Token']
 
 #functions e listas
 
 def get_piada():
-     link = 'https://official-joke-api.appspot.com/random_joke'
+     link = 'https://v2.jokeapi.dev/joke/Miscellaneous,Dark,Pun,Spooky,Christmas'
      response = requests.get(link)
      dados = json.loads(response.text)
-     setup = dados.get('setup')
-     punch_line = dados.get('punchline')
-     dicio = {'first': setup , 'second': punch_line}
-     return dicio
+     joke_type = dados.get('type')
+     if joke_type == 'single':
+          return dados.get('joke')
+     else:
+          setup = dados.get('setup')
+          punchline = dados.get('delivery')
+          piada_composta = {'first': setup, 'second': punchline}
+          return piada_composta
 
 gojo_flowers = ["flores", "flowers","flor", "lindo", "bonito", "paisagem"]
 gojo_kire = ["Que lindo!", "Pretty!", "綺麗"]
@@ -42,16 +46,18 @@ def get_anime_quote():
      quote = data.get('quote')
 
      return('"'+ quote + '" -' + character + ', ' + anime)
-
+          
 def get_letra():
      alfabeto = string.ascii_uppercase
      alfabeto = list(alfabeto)
      return random.choice(alfabeto)
 
+
 #Codigo do bot em si
 
 intents = discord.Intents.default()
 intents.members = True
+#intents.member é pra eu conseguir o id do dono do server
 bot = commands.Bot(command_prefix = '>' , help_command=None, intents = intents)
 
 #Status do bot
@@ -61,6 +67,7 @@ async def on_ready():
      print(f'{bot.user.name} has connected to Discord!')
      joguinho = discord.Game('Jujutsu Kaisen')
      await bot.change_presence(status = discord.Status.idle, activity = joguinho)
+
 
 #Entrando e saindo de servidores
 
@@ -87,9 +94,9 @@ async def on_guild_join(guilda):
      #Get the User or Member object and call abc.Messageable.send(). For example:
      #user = client.get_user(381870129706958858)
      #await user.send('👀')
-
+     
      await guilda.text_channels[0].send(embed = anexo1)
-
+     
      dono1 = guilda.owner
      await dono1.send(embed = anexo2)
 
@@ -116,15 +123,7 @@ async def on_guild_remove(guilda):
      dono = guilda.owner
      print(dono)
      await dono.send(embed = despedida)
-
-#Resposta a erros
-
-@bot.event
-async def on_command_error(ctx, error):
-     if isinstance(error, commands.CommandNotFound):
-          await ctx.send(random.choice(gojo_teach))
-          await ctx.send('Digite ">help" para ver meus comandos')
-
+     
 #reactions do bot
 
 @bot.event
@@ -146,11 +145,24 @@ async def on_message(message):
 @bot.command(name= 'joke')
 async def piada_(ctx):
      piada = get_piada()
-     primeiro = piada.get('first')
-     segundo = piada.get('second')
-     await ctx.send(primeiro)
-     time.sleep(2.5)
-     await ctx.send(segundo)
+     if piada == str(piada):
+          await ctx.send(piada)
+     else:
+          primeiro = piada.get('first')
+          segundo = piada.get('second')
+          await ctx.send(primeiro)
+          time.sleep(2.5)
+          await ctx.send(segundo)
+     
+@bot.command(name='clear')
+@commands.has_guild_permissions(manage_messages = True)
+async def clear(ctx, arg : int):
+    if 21 > arg > 0:
+        await ctx.channel.purge(limit = int(arg) + 1)
+    if arg > 21:
+        await ctx.reply('KRL MENÓ N ALOPRA')
+    if arg <= 0:
+        await ctx.send('Por favor, você sabe que isso não é possível')
 
 @bot.command(name= 'wisdom')
 async def saber_(ctx):
@@ -171,9 +183,15 @@ async def alfa(ctx):
 async def _wifi(ctx):
      await ctx.send(f'A net do bot está com {round(bot.latency * 1000)}ms')
 
-@bot.command(name = 'clear')
-async def _limpo(ctx, amount = 8):
-     await ctx.channel.purge(limit = amount)  
+#Comando de música
+# >play/>p ; >skip/>s ; >pause/>pa ; >resume/>r ;>leave/>l ; >playingnow/>pnw ;  
+
+#@bot.event
+#async def on_message(message):
+     #msg_cont = message.content
+     #if msg_cont.startswith('>play'):
+         # musica = msg_cont.split('>play ',1)[1]
+          
 
 #Comando help
 
@@ -200,6 +218,13 @@ async def help(ctx):
      await ctx.send(embed = titulo1)
 
 @help.command()
+async def joke(ctx):
+     titulo2 = discord.Embed(title = '🤡 Comando ´>joke´ 🤡', description = '''Envia uma piada aleatória em inglês
+     *AVISO*
+     ➜Podem ser de humor negro''')
+     await ctx.send(embed = titulo2)
+
+@help.command()
 async def wisdom(ctx):
      titulo2 = discord.Embed(title = '🎎 Comando ´>wisdom´ 🎎', description = 'Entrega um saber de um personagem de anime')
      await ctx.send(embed = titulo2)
@@ -221,11 +246,8 @@ async def botnet(ctx):
 
 @help.command()
 async def clear(ctx):
-     titulo2 = discord.Embed(title = '🧹 Comando ´>clear´ 🧹', description = 'Exclui as ultimas 7 mensagens do chat')
+     titulo2 = discord.Embed(title = '🧹 Comando ´>clear x´ 🧹', description = 'Exclui as últimas x mensagens do chat')
      await ctx.send(embed = titulo2)
 
-
-bot.run('TOKEN')
-
-```
-
+keep_alive()
+bot.run(my_secret)
